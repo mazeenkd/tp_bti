@@ -1,0 +1,29 @@
+def Conv2D(matrix: Union[List[List[float]], np.ndarray], 
+             kernel: Union[List[List[float]], np.ndarray], 
+             stride: Tuple[int, int] = (1, 1), 
+             dilation: Tuple[int, int] = (1, 1)) -> np.ndarray:
+    """Makes a 2D convolution with the kernel over matrix using defined stride, dilation and no padding along axes.
+    Args:
+        matrix (Union[List[List[float]], np.ndarray]): 2D matrix to be convolved.
+        kernel (Union[List[List[float]], np.ndarray]): 2D odd-shaped matrix (e.g. 3x3, 5x5, 13x9, etc.).
+        stride (Tuple[int, int], optional): Tuple of the stride along axes. With the `(r, c)` stride we move on `r` pixels along rows and on `c` pixels along columns on each iteration. Defaults to (1, 1).
+        dilation (Tuple[int, int], optional): Tuple of the dilation along axes. With the `(r, c)` dilation we distancing adjacent pixels in kernel by `r` along rows and `c` along columns. Defaults to (1, 1).
+    Returns:
+        np.ndarray: 2D Feature map, i.e. matrix after convolution.
+    """
+    matrix, kernel, k, h_out, w_out = _check_params(matrix, kernel, stride, dilation, (0, 0))
+    matrix_out = np.zeros((h_out, w_out))
+    
+    b = k[0] // 2, k[1] // 2
+    center_x_0 = b[0] * dilation[0]
+    center_y_0 = b[1] * dilation[1]
+    for i in range(h_out):
+        center_x = center_x_0 + i * stride[0]
+        indices_x = [center_x + l * dilation[0] for l in range(-b[0], b[0] + 1)]
+        for j in range(w_out):
+            center_y = center_y_0 + j * stride[1]
+            indices_y = [center_y + l * dilation[1] for l in range(-b[1], b[1] + 1)] 
+            submatrix = matrix[indices_x, :][:, indices_y]
+
+            matrix_out[i][j] = np.sum(np.multiply(submatrix, kernel))
+    return matrix_out
